@@ -1,98 +1,92 @@
 defmodule UnitFmt do
+  alias UnitFmt.Math
+
+  def format_binary(value) do
+    {base, prefix, _} = binary_prefix(value)
+    "#{base}#{prefix}"
+  end
+
+  def format_metric(value, unit \\ :base) do
+    {base, prefix, _} = metric_prefix(value, unit)
+    "#{base}#{prefix}"
+  end
+
   binary_units = [
-    # Yobi
-    {:math.pow(2, 80), "Yi"},
-    # Zebi
-    {:math.pow(2, 70), "Zi"},
-    # Exbi
-    {:math.pow(2, 60), "Ei"},
-    # Pebi
-    {:math.pow(2, 50), "Pi"},
-    # Tebi
-    {:math.pow(2, 40), "Ti"},
-    # Gibi
-    {:math.pow(2, 30), "Gi"},
-    # Mebi
-    {:math.pow(2, 20), "Mi"},
-    # Kibi
-    {:math.pow(2, 10), "Ki"},
-    # base
-    {1, ""},
+    {Math.ipow(2, 80), "Yi", "yobi"},
+    {Math.ipow(2, 70), "Zi", "zebi"},
+    {Math.ipow(2, 60), "Ei", "exbi"},
+    {Math.ipow(2, 50), "Pi", "pebi"},
+    {Math.ipow(2, 40), "Ti", "tebi"},
+    {Math.ipow(2, 30), "Gi", "gibi"},
+    {Math.ipow(2, 20), "Mi", "mebi"},
+    {Math.ipow(2, 10), "Ki", "kibi"},
+    {1, "", ""},
   ]
-
-  for {threshold, suffix} <- binary_units do
-    def format_binary(value) when is_number(value) and unquote(threshold) <= value do
-      normalize_float(value / unquote(threshold), unquote(suffix))
-    end
-  end
-
-  def format_binary(value) when is_integer(value) and value <= 0 do
-    Integer.to_string(value)
-  end
-
-  def format_binary(value) when is_float(value) and value <= 0.0 do
-    normalize_float(value, "")
-  end
-
-  @spec format_metric(number, :micro | :milli | :base) :: String.t()
-  def format_metric(value, base \\ :base)
-
-  def format_metric(value, :micro) when is_number(value) do
-    format_metric(value / 1_000_000, :base)
-  end
-
-  def format_metric(value, :milli) when is_number(value) do
-    format_metric(value / 1_000, :base)
-  end
-
-  def format_metric(value, :base) when is_integer(value) and value <= 0 do
-    Integer.to_string(value)
-  end
-
-  def format_metric(value, :base) when is_float(value) and value <= 0.0 do
-    normalize_float(value, "")
-  end
 
   metric_units = [
-    # Exa
-    {1_000_000_000_000_000_000, "E"},
-    # Peta
-    {1_000_000_000_000_000, "P"},
-    # Tera
-    {1_000_000_000_000, "T"},
-    # Giga
-    {1_000_000_000, "G"},
-    # Mega
-    {1_000_000, "M"},
-    # Kilo
-    {1_000, "k"},
-    # base
-    {1, ""},
-    # Milli
-    {1.0e-3, "m"},
-    # Micro
-    {1.0e-6, "μ"},
-    # Nano
-    {1.0e-9, "n"},
-    # Pico
-    {1.0e-12, "p"},
-    # Femto
-    {1.0e-15, "f"},
+    {Math.pow(10, 30), "Q", "quetta"},
+    {Math.pow(10, 27), "R", "ronna"},
+    {Math.pow(10, 24), "Y", "yotta"},
+    {Math.pow(10, 21), "Z", "zetta"},
+    {Math.pow(10, 18), "E", "exa"},
+    {Math.pow(10, 15), "P", "peta"},
+    {Math.pow(10, 12), "T", "tera"},
+    {Math.pow(10, 9), "G", "giga"},
+    {Math.pow(10, 6), "M", "mega"},
+    {Math.pow(10, 3), "k", "kilo"},
+    {1, "", ""},
+    {1.0e-3, "m", "milli"},
+    {1.0e-6, "μ", "micro"},
+    {1.0e-9, "n", "nano"},
+    {1.0e-12, "p", "pico"},
+    {1.0e-15, "f", "femto"},
   ]
 
-  for {threshold, suffix} <- metric_units do
-    def format_metric(value, :base) when is_number(value) and unquote(threshold) <= value do
-      normalize_float(value / unquote(threshold), unquote(suffix))
+  @spec binary_prefix(number()) :: {String.t(), String.t(), String.t()}
+  for {threshold, prefix, prefix_name} <- binary_units do
+    def binary_prefix(value) when is_number(value) and unquote(threshold) <= value do
+      {normalize_float(value / unquote(threshold)), unquote(prefix), unquote(prefix_name)}
     end
   end
 
-  defp normalize_float(value, suffix) do
-    value = Float.round(value, 2)
+  def binary_prefix(value) when is_integer(value) and value <= 0 do
+    {Integer.to_string(value), "", ""}
+  end
 
-    if Float.floor(value) == value do
-      to_string(floor(value)) <> suffix
+  def binary_prefix(value) when is_float(value) and value <= 0.0 do
+    {normalize_float(value), "", ""}
+  end
+
+  @spec metric_prefix(number, :micro | :milli | :base) :: {String.t(), String.t(), String.t()}
+  def metric_prefix(value, base \\ :base)
+
+  def metric_prefix(value, :micro) when is_number(value) do
+    metric_prefix(value / 1_000_000, :base)
+  end
+
+  def metric_prefix(value, :milli) when is_number(value) do
+    metric_prefix(value / 1_000, :base)
+  end
+
+  def metric_prefix(value, :base) when is_integer(value) and value <= 0 do
+    {Integer.to_string(value), "", ""}
+  end
+
+  def metric_prefix(value, :base) when is_float(value) and value <= 0.0 do
+    {normalize_float(value), "", ""}
+  end
+
+  for {threshold, prefix, prefix_name} <- metric_units do
+    def metric_prefix(value, :base) when is_number(value) and unquote(threshold) <= value do
+      {normalize_float(value / unquote(threshold)), unquote(prefix), unquote(prefix_name)}
+    end
+  end
+
+  defp normalize_float(value) when is_float(value) do
+    if :math.floor(value) == value do
+      Integer.to_string(floor(value))
     else
-      IO.iodata_to_binary(:io_lib.format("~.2f~s", [value, suffix]))
+      :erlang.float_to_binary(value, decimals: 2)
     end
   end
 end
