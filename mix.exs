@@ -5,10 +5,20 @@ defmodule UnitFmt.MixProject do
     [
       app: :unit_fmt,
       version: "0.1.0",
-      elixir: "~> 1.16",
+      description: description(),
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: package(),
+      source_url: "https://github.com/IceDragon200/unit_fmt",
+      homepage_url: "https://github.com/IceDragon200/unit_fmt",
     ]
+  end
+
+  defp description do
+    """
+    A simple module for formatting numbers with a unit prefix.
+    """
   end
 
   def application do
@@ -19,6 +29,16 @@ defmodule UnitFmt.MixProject do
 
   defp deps do
     [
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: ["Corey Powell"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/IceDragon200/unit_fmt"
+      },
     ]
   end
 end
