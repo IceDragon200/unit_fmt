@@ -6,9 +6,76 @@ defmodule UnitFmt do
     "#{base}#{prefix}"
   end
 
-  def format_metric(value, unit \\ :base) do
+  def format_metric(value, unit \\ :base)
+
+  def format_metric(value, unit) when value >= 0 do
     {base, prefix, _} = metric_prefix(value, unit)
     "#{base}#{prefix}"
+  end
+
+  def format_metric(value, unit) when value < 0 do
+    "-#{format_metric(-value, unit)}"
+  end
+
+  @allowed_time_units [:millisecond, :second, :minute, :hour, :day]
+
+  def format_time(value, unit \\ :millisecond)
+
+  def format_time(value, unit) when value >= 0 and unit in @allowed_time_units do
+    ms =
+      case unit do
+        :millisecond -> value
+        :second -> value * 1000
+        :minute -> value * 1000 * 60
+        :hour -> value * 1000 * 60 * 60
+        :day -> value * 1000 * 60 * 60 * 24
+      end
+
+    seconds =
+      ms
+      |> div(1000)
+      |> rem(60)
+      |> floor()
+
+    minutes =
+      ms
+      |> div(1000)
+      |> div(60)
+      |> rem(60)
+      |> floor()
+
+    hours =
+      ms
+      |> div(1000)
+      |> div(60)
+      |> div(60)
+      |> rem(24)
+      |> floor()
+
+    days = floor(ms / 24 / 60 / 60 / 1000)
+
+    case {days, hours, minutes, seconds} do
+      {0, 0, m, s} ->
+        "#{padded2(m)}:#{padded2(s)}"
+
+      {0, h, m, s} ->
+        "#{padded2(h)}:#{padded2(m)}:#{padded2(s)}"
+
+      {d, h, m, s} ->
+        "#{d}:#{padded2(h)}:#{padded2(m)}:#{padded2(s)}"
+    end
+  end
+
+  def format_time(value, unit) when value < 0 do
+    "-" <> format_time(-value, unit)
+  end
+
+  defp padded2(num) when num >= 0 and num < 10 do
+    "0#{num}"
+  end
+
+  defp padded2(num) when num >= 10 and num < 100 do
+    "#{num}"
   end
 
   binary_units = [
