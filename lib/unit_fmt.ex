@@ -1,7 +1,7 @@
 defmodule UnitFmt do
   alias UnitFmt.Math
 
-  def format_binary(value) do
+  def format_binary(value) when is_number(value) do
     {base, prefix, _} = binary_prefix(value)
     "#{base}#{prefix}"
   end
